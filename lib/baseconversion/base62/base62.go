@@ -12,35 +12,29 @@ func (c Convertor) GetBaseNumber() int {
 	return 62
 }
 
-func (c Convertor) Encode(num int) (string, error) {
+func (c Convertor) Encode(num int) string {
 	str := ""
 	for true {
 		r := num % c.GetBaseNumber()
 		num = num / c.GetBaseNumber()
-		symbol, err := c.getSymbolOfNumber(r)
-		if err != nil {
-			return "", err
-		}
+		symbol := c.getSymbolOfNumber(r)
 		str = string(symbol) + str
 		if num == 0 {
 			break
 		}
 	}
-	return str, nil
+	return str
 }
-func (c Convertor) Decode(str string) (int, error) {
+func (c Convertor) Decode(str string) int {
 	decodedValue := 0
 	str = strings.TrimLeft(str, "0")
 	strLen := len(str)
 	for i, char := range str {
-		symbolValue, err := c.getSymbolValue(char)
-		if err != nil {
-			return -1, err
-		}
+		symbolValue := c.getSymbolValue(char)
 		pow := strLen - (i + 1)
 		decodedValue += symbolValue * int(math.Pow(float64(c.GetBaseNumber()), float64(pow)))
 	}
-	return decodedValue, nil
+	return decodedValue
 }
 
 const (
@@ -50,30 +44,30 @@ const (
 	SmallLettersOffset        = int('a'-'9') - NumberOfAlphabets - 1
 )
 
-func (c Convertor) getSymbolValue(char rune) (int, error) {
+func (c Convertor) getSymbolValue(char rune) int {
 	var offset = int(char - ZeroAsciCode)
 	switch {
 	case char >= '0' && char <= '9':
-		return offset, nil
+		return offset
 	case char >= 'A' && char <= 'Z':
-		return offset - CapitalLettersOffset, nil
+		return offset - CapitalLettersOffset
 	case char >= 'a' && char <= 'z':
-		return offset - SmallLettersOffset, nil
+		return offset - SmallLettersOffset
 	default:
-		return -1, &UnexpectedCharacterError{}
+		panic("Unexpected character!\nAcceptable characters are numerical and alphabetical")
 	}
 }
 
-func (c Convertor) getSymbolOfNumber(num int) (rune, error) {
+func (c Convertor) getSymbolOfNumber(num int) rune {
 	var offset = rune(num) + ZeroAsciCode
 	switch {
 	case num >= 0 && num <= 9:
-		return offset, nil
+		return offset
 	case num > 9 && num <= 9+NumberOfAlphabets:
-		return offset + rune(CapitalLettersOffset), nil
+		return offset + rune(CapitalLettersOffset)
 	case num > NumberOfAlphabets && num <= (9+2*NumberOfAlphabets):
-		return offset + rune(SmallLettersOffset), nil
+		return offset + rune(SmallLettersOffset)
 	default:
-		return -1, &UnexpectedNumberError{}
+		panic("Unexpected Number!\nAcceptable numbers are between 0 and 61")
 	}
 }

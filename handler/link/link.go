@@ -25,12 +25,10 @@ func GetLink(c *fiber.Ctx) error {
 	shorten := c.Params("shorten")
 
 	convertor := shortlinkconversion.InitConvertor(base62.Convertor{})
-	ID, _ := convertor.Decode(shorten)
 
-	filter := bson.M{"id": ID}
+	filter := bson.M{"id": convertor.Decode(shorten)}
 	link, err := model.GetLink(filter)
 	if err != nil || link == nil {
-
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{})
 	}
 	return c.Redirect(link.URL, fiber.StatusMovedPermanently)
@@ -60,11 +58,9 @@ func NewLink(c *fiber.Ctx) error {
 		return handler.SendInternalServerErrorResponse(c, err)
 	}
 	convertor := shortlinkconversion.InitConvertor(base62.Convertor{})
-	shorten, _ := convertor.GetShorten(link.ID)
-
 
 	return c.Status(fiber.StatusOK).JSON(response{
 		URL:      link.URL,
-		ShortUrl: shorten,
+		ShortUrl: convertor.GetShorten(link.ID),
 	})
 }

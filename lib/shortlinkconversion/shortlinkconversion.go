@@ -3,8 +3,8 @@ package shortlinkconversion
 import "os"
 
 type linkConverter interface {
-	Encode(number int) (string, error)
-	Decode(str string) (int, error)
+	Encode(number int) string
+	Decode(str string) int
 }
 
 type shortLinkConvertor struct {
@@ -21,15 +21,14 @@ func (s *shortLinkConvertor) setConvertor(c linkConverter) {
 	s.convertor = c
 }
 
-func (s *shortLinkConvertor) GetShorten(num int) (string, error)  {
-	shorten, err := s.convertor.Encode(num)
-	return os.Getenv("DOMAIN") + "/" + shorten, err
+func (s *shortLinkConvertor) GetShorten(num int) string {
+	return os.Getenv("DOMAIN") + "/" + s.convertor.Encode(num)
 }
 
-func (s *shortLinkConvertor) Encode(number int) (string, error) {
+func (s *shortLinkConvertor) Encode(number int) string {
 	return s.convertor.Encode(number)
 }
 
-func (s *shortLinkConvertor) Decode(str string) (int, error) {
+func (s *shortLinkConvertor) Decode(str string) int {
 	return s.convertor.Decode(str)
 }
