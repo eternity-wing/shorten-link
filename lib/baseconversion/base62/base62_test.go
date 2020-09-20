@@ -1,6 +1,7 @@
 package base62
 
 import (
+	"github.com/stretchr/testify/assert"
 	"strings"
 	"testing"
 )
@@ -34,34 +35,22 @@ func TestConvertor_ValidStringDecode(t *testing.T) {
 	convertor := Convertor{}
 
 	for _, tc := range validStringCases {
-		if val := convertor.Decode(tc.str); val != tc.value {
-			t.Errorf("Expect return %d for %s, but return %d", tc.value, tc.str, val)
-		}
+		assert.Equal(t, convertor.Decode(tc.str), tc.value)
 	}
 
 }
 
 func TestConvertor_InValidStringDecode(t *testing.T) {
 	convertor := Convertor{}
-	defer func() {
-		if err := recover(); err == nil {
-			t.Errorf("Expected panic for invalid string, but nothing happened")
-		}
-	}()
 	tc := stringTestCase{str: "00-", value: -1}
-	convertor.Decode(tc.str)
-
+	assert.Panics(t, func() { convertor.Decode(tc.str) }, "Expected panic for invalid string, but nothing happened")
 }
 
 func TestConvertor_Encode(t *testing.T) {
 	convertor := Convertor{}
 
 	for _, tc := range validStringCases {
-		val := convertor.Encode(tc.value)
-		expectedStr := strings.TrimLeft(tc.str, "0")
-		if val != expectedStr {
-			t.Errorf("Expect return %s for %d, but return %s", expectedStr, tc.value, val)
-		}
+		assert.Equal(t, strings.TrimLeft(tc.str, "0"), convertor.Encode(tc.value))
 	}
 
 }
@@ -69,38 +58,19 @@ func TestConvertor_Encode(t *testing.T) {
 func TestConvertor_getSymbolValueForValidSymbols(t *testing.T) {
 	convertor := Convertor{}
 	for _, tc := range validSymbols {
-		val := convertor.getSymbolValue(tc.character)
-
-		if val != tc.value {
-			t.Errorf("Expect return %d for %c, but return %d", tc.value, tc.character, val)
-		}
+		assert.Equal(t, convertor.getSymbolValue(tc.character), tc.value)
 	}
 
 }
 
 func TestConvertor_getSymbolValueForInvalidSymbol(t *testing.T) {
-
-	defer func() {
-		if err := recover(); err == nil {
-			t.Errorf("Expected panic for invalid symbol, but nothing happened")
-		}
-	}()
-
 	convertor := Convertor{}
 	tc := symbolTestCase{character: '*', value: -1}
-	convertor.getSymbolValue(tc.character)
+	assert.Panics(t, func() { convertor.getSymbolValue(tc.character) }, "Expected panic for invalid symbol, but nothing happened")
 }
 
 func TestConvertor_getSymbolOfInvalidNumber(t *testing.T) {
-
-	defer func() {
-		if err := recover(); err == nil {
-			t.Errorf("Expected panic for invalid number, but nothing happened")
-		}
-	}()
-
 	convertor := Convertor{}
 	tc := symbolTestCase{character: '*', value: -1}
-	convertor.getSymbolOfNumber(tc.value)
-
+	assert.Panics(t, func() { convertor.getSymbolOfNumber(tc.value) }, "Expected panic for invalid number, but nothing happened")
 }
