@@ -6,6 +6,8 @@ import (
 	"github.com/eternity-wing/short_link/lib/baseconversion/base62"
 	"github.com/eternity-wing/short_link/lib/shortlinkconversion"
 	"github.com/eternity-wing/short_link/model"
+	"github.com/eternity-wing/short_link/repository/counterrepository"
+	"github.com/eternity-wing/short_link/repository/linkrepository"
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
 )
@@ -27,9 +29,10 @@ func GetLink(c *fiber.Ctx) error {
 	convertor := shortlinkconversion.InitConvertor(base62.Convertor{})
 
 	filter := bson.M{"id": convertor.Decode(shorten)}
-	link, err := model.GetLink(filter)
-	if err != nil || link == nil {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{})
+	lnkRepo := linkrepository.NewRepository()
+	link := lnkRepo.Find(filter)
+	if link == nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"message": "The requested resource does not exist"})
 	}
 	return c.Redirect(link.URL, fiber.StatusMovedPermanently)
 }
@@ -47,16 +50,15 @@ func NewLink(c *fiber.Ctx) error {
 		return handler.SendValidationFailedResponse(c, err)
 	}
 
+	ctrRepo := counterrepository.NewRepository()
+	lnkRepo := linkrepository.NewRepository()
 	link := model.Link{
 		UserID: req.UserID,
 		URL:    req.URL,
+		ID:     ctrRepo.GetNextSequenceValue("link"),
 	}
 
-	_, err = model.NewLink(&link)
-
-	if err != nil {
-		return handler.SendInternalServerErrorResponse(c, err)
-	}
+	lnkRepo.Create(&link)
 	convertor := shortlinkconversion.InitConvertor(base62.Convertor{})
 
 	return c.Status(fiber.StatusOK).JSON(response{

@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"os"
+	"sync"
 	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
@@ -16,26 +17,32 @@ type MongoInstance struct {
 	DB     *mongo.Database
 }
 
-var Mongo MongoInstance
+var mg *MongoInstance
 
-func InitiateMongo() error {
+var lock = &sync.Mutex{}
 
-	client, err := GetMongoDbConnection()
-
-	if err != nil {
-		return err
+func GetMongoInstance() *MongoInstance {
+	if mg == nil {
+		lock.Lock()
+		defer lock.Unlock()
+		InitiateMongo()
 	}
 
+	if mg == nil {
+		InitiateMongo()
+	}
+	return mg
+}
 
-	Mongo = MongoInstance{
+func InitiateMongo() {
+	client := GetMongoDbConnection()
+	mg = &MongoInstance{
 		Client: client,
 		DB:     client.Database(os.Getenv("DB_NAME")),
 	}
-
-	return nil
 }
 
-func GetMongoDbConnection() (*mongo.Client, error) {
+func GetMongoDbConnection() *mongo.Client {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -49,10 +56,9 @@ func GetMongoDbConnection() (*mongo.Client, error) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	return client, nil
+	return client
 }
 
 func (mg *MongoInstance) GetCollection(CollectionName string) *mongo.Collection {
 	return mg.DB.Collection(CollectionName)
 }
-
