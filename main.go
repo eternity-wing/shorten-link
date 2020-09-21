@@ -1,8 +1,8 @@
 package main
 
 import (
+	"github.com/eternity-wing/short_link/controller/linkcontroller"
 	"github.com/eternity-wing/short_link/database"
-	"github.com/eternity-wing/short_link/handler/link"
 	"github.com/gofiber/fiber/v2"
 	"github.com/joho/godotenv"
 	"log"
@@ -10,8 +10,8 @@ import (
 )
 
 func setupRoutes(app *fiber.App) {
-	app.Get("/:shorten", link.GetLink)
-	app.Post("/api/v1/links", link.NewLink)
+	app.Get("/:shorten", linkcontroller.Get)
+	app.Post("/api/v1/links", linkcontroller.New)
 }
 
 func main() {
