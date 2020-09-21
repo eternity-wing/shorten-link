@@ -9,7 +9,6 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/bson"
-	"log"
 	"os"
 )
 
@@ -19,6 +18,12 @@ func setupRoutes(app *fiber.App) {
 }
 
 func main() {
+	app := setup()
+
+	app.Listen(os.Getenv("PORT"))
+}
+
+func setup() *fiber.App {
 	app := fiber.New()
 	app.Use(recover.New())
 
@@ -26,15 +31,23 @@ func main() {
 	loadEnvFile()
 	database.InitiateMongo()
 	loadFixtures()
-
-	app.Listen(os.Getenv("PORT"))
+	return app
 }
 
 func loadEnvFile() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
+
+	env := os.Getenv("APP_ENV")
+	if "" == env {
+		env = "development"
 	}
+
+	godotenv.Load(".env." + env + ".local")
+	if "test" != env {
+		godotenv.Load(".env.local")
+	}
+	godotenv.Load(".env." + env)
+	godotenv.Load()
+
 }
 
 func loadFixtures() {
